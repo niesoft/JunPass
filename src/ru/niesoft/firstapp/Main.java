@@ -5,21 +5,31 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 
+import java.io.File;
+
 
 public class Main implements ActionListener {
 
     // Стартовые переменные
+    final static String jarPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+    private JFrame viewForm;
 
 
     public Main() {
-        toConsole("hallo niesoft");
+        ToConsole("Определим нужные нам папки, проверим файл настроек");
+        GetFileParam();
+
         initComponents();
+        JOptionPane.showMessageDialog(viewForm, jarPath, "Warning", JOptionPane.WARNING_MESSAGE);
+
+        ToConsole(jarPath);
+
     }
 
 
-    private JFrame viewForm;
 
-    public static void toConsole(String text){
+
+    public static void ToConsole(String text){
         System.out.print(text);
     }
 
@@ -75,5 +85,15 @@ public class Main implements ActionListener {
         return inpts;
     }
 
+
+    public static void GetFileParam(){
+        File f = new File(jarPath);
+        if(f.exists() && !f.isDirectory()) {
+            ToConsole("folder exists");
+        }else{
+            ToConsole("not found");
+        }
+
+    }
 
 }
