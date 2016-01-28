@@ -1,14 +1,19 @@
 package ru.niesoft.firstapp;
-// Для работы с окошками:
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.*;
 import java.lang.reflect.Type;
-import java.io.FileWriter;
+import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
+import java.util.zip.Inflater;
 
 
 public class Main implements ActionListener {
@@ -31,14 +36,9 @@ public class Main implements ActionListener {
     public Main() {
         ToConsole("Определим нужные нам папки, проверим файл настроек");
         //JOptionPane.showMessageDialog(viewForm, jarPath, "Warning", JOptionPane.WARNING_MESSAGE);
-
-
-
         GetFileParam();
-
         initComponents();
-
-
+        ToZip();
     }
 
 
@@ -59,6 +59,7 @@ public class Main implements ActionListener {
         WindowListener winListener = new TestWindowListener();
         viewForm.addWindowListener(winListener);
 
+        viewForm.setForeground(Color.getHSBColor(2.22f,2.22f,2.22f));
 
 
         JButton button = new JButton("Провенрка кодировки");
@@ -106,7 +107,6 @@ public class Main implements ActionListener {
 
 
     public static void GetFileParam(){
-        boolean bool = false;
         File f = new File(jarPath + ".config");
         if(f.exists() && !f.isDirectory()) {
             ToConsole("Загружаем файл настроек");
@@ -127,16 +127,10 @@ public class Main implements ActionListener {
                 e.printStackTrace();
             }
             ToConsole("Разбираем JSON формат");
-            ToConsole(config);
             ReadParam(config);
-
-
-//            final String[] CONFIG = new JsonParser.;
-
-//            final String CONFIG = f.
         }else{
             try{
-                bool = f.createNewFile();
+                boolean bool = f.createNewFile();
                 ToConsole("Файл настроек не найден, статус записи: " + bool);
             }catch(Exception e){
                 e.printStackTrace();
@@ -158,7 +152,6 @@ public class Main implements ActionListener {
     }
 
     public static void ReadParam(String config){
-        Gson gson = new Gson();
         Type itemsArrType = new TypeToken<GoodsItem[]>() {}.getType();
         GoodsItem[] arrItemsDes = new Gson().fromJson(config, itemsArrType);
         for (int i=0; i < arrItemsDes.length; i++){
@@ -189,7 +182,6 @@ public class Main implements ActionListener {
         String jsonStr = new Gson().toJson(arrItems);
         System.out.println(jsonStr);
 
-        File f = new File(jarPath + ".config");
         try {
             FileWriter writer = new FileWriter(jarPath + ".config", false);
             writer.write(jsonStr);
@@ -228,9 +220,62 @@ public class Main implements ActionListener {
     }
 
 
+    public byte[] InCompress(String toCompress){
+        byte[] input = toCompress.getBytes();
+        Deflater compressor = new Deflater();
+        compressor.setLevel(Deflater.BEST_COMPRESSION);
+        compressor.setInput(input);
+        compressor.finish();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(input.length);
+        byte[] buf = new byte[1024];
+        while (!compressor.finished()) {
+            int count = compressor.deflate(buf);
+            bos.write(buf, 0, count);
+        }
+        try {
+            bos.close();
+        }catch(IOException e) {
+            System.out.println(e.getMessage());
+        }
+        byte[] compressedData = bos.toByteArray();
+        DeCompress(compressedData);
+        System.out.println(String.valueOf(compressedData));
+        return compressedData;
+    }
+
+
+    public String DeCompress(byte[] compressedData){
+        Inflater decompressor = new Inflater();
+        decompressor.setInput(compressedData);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(compressedData.length);
+        byte[] buf = new byte[1024];
+        while (!decompressor.finished()) {
+            try {
+                int count = decompressor.inflate(buf);
+                bos.write(buf, 0, count);
+            }catch(DataFormatException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        try{
+            bos.close();
+        }catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        String decompressedData = bos.toString();
+        System.out.println(decompressedData);
+        return decompressedData;
+    }
 
 
 
 
 
-}
+
+
+
+
+
+
+
+    }
