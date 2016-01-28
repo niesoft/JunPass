@@ -1,11 +1,16 @@
 package ru.niesoft.firstapp;
 // Для работы с окошками:
+
+import sun.org.mozilla.javascript.internal.json.*;
+
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.*;
+import java.io.*;
 
-import java.io.File;
+
+
 
 
 public class Main implements ActionListener {
@@ -13,6 +18,7 @@ public class Main implements ActionListener {
     // Стартовые переменные
     final static String jarPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
     private JFrame viewForm;
+    public static BufferedReader input = null;
 
 
     public Main() {
@@ -20,7 +26,7 @@ public class Main implements ActionListener {
         GetFileParam();
 
         initComponents();
-        JOptionPane.showMessageDialog(viewForm, jarPath, "Warning", JOptionPane.WARNING_MESSAGE);
+        //JOptionPane.showMessageDialog(viewForm, jarPath, "Warning", JOptionPane.WARNING_MESSAGE);
 
         ToConsole(jarPath);
 
@@ -30,7 +36,7 @@ public class Main implements ActionListener {
 
 
     public static void ToConsole(String text){
-        System.out.print(text);
+        System.out.println(text);
     }
 
     private void initComponents() {
@@ -87,11 +93,40 @@ public class Main implements ActionListener {
 
 
     public static void GetFileParam(){
-        File f = new File(jarPath);
+        boolean bool = false;
+        File f = new File(jarPath + ".config");
         if(f.exists() && !f.isDirectory()) {
-            ToConsole("folder exists");
+            ToConsole("Загружаем файл настроек");
+            try {
+                input = new BufferedReader(new FileReader(jarPath + ".config"));
+            }catch (FileNotFoundException e) {
+                System.out.println("File \"" + jarPath + ".config" + "\" not found");
+                return;
+            }
+            ToConsole("Загружаем настройки");
+            String tmp;
+            try {
+                while ((tmp = input.readLine()) != null) ToConsole(tmp);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            ToConsole("Разбираем JSON формат");
+            JsonParser parser = new JsonParser();
+            parser.parseValue(tmp);
+
+
+
+
+//            final String[] CONFIG = new JsonParser.;
+
+//            final String CONFIG = f.
         }else{
-            ToConsole("not found");
+            try{
+                bool = f.createNewFile();
+                ToConsole("Файл настроек не найден, статус записи: " + bool);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
         }
 
     }
