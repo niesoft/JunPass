@@ -14,6 +14,8 @@ import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 
+
+
 public class Main implements ActionListener {
 
     // Стартовые переменные
@@ -24,9 +26,9 @@ public class Main implements ActionListener {
     public static int startup_location_x = 0;
     public static int startup_location_y = 0;
     public static boolean window_on_top = false;
+
     public JFrame viewForm;
     public JFrame authForm;
-    public ru.niesoft.firstapp.Designer Designer = new ru.niesoft.firstapp.Designer();
 
     // Глобальные переменные которые не меняются
     final static String jarPath = System.getProperty("user.dir") + System.getProperty("file.separator");
@@ -43,7 +45,7 @@ public class Main implements ActionListener {
     public Main() {
         getAuth();
         ToConsole("Определим нужные нам папки, проверим файл настроек");
-        //JOptionPane.showMessageDialog(viewForm, jarPath, "Warning", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(viewForm, jarPath, "Warning", JOptionPane.WARNING_MESSAGE);
        // GetFileParam();
        // initComponents();
 
@@ -62,16 +64,12 @@ public class Main implements ActionListener {
         });
     }
 
-    public static JTextArea driwTextArea(int left, int top, int x, int y) {
-        JTextArea inpts = new JTextArea();
-        inpts.setSize(x, y);
-        inpts.setLocation(left, top);
-        return inpts;
-    }
-
     public static void ReadParam(String config) {
-        Type itemsArrType = new TypeToken<GoodsItem[]>() {
-        }.getType();
+        ToConsole(config);
+        Type itemsArrType = new TypeToken<GoodsItem[]>() {}.getType();
+
+
+
         GoodsItem[] arrItemsDes = new Gson().fromJson(config, itemsArrType);
         for (int i = 0; i < arrItemsDes.length; i++) {
             if (arrItemsDes[i].config.equalsIgnoreCase("startup_size_w"))
@@ -211,6 +209,9 @@ public class Main implements ActionListener {
                     boolean auth = CheckAuth(password.getPassword());
                     if (auth){
                         ToConsole("auth true");
+                        GetFileParam();
+                        initComponents();
+                        authForm.dispose();
                     }else{
                         ToConsole("auth false");
                         password.setBorder(BorderFactory.createMatteBorder(0, 0, 4, 0, DARKERROR));
@@ -230,7 +231,6 @@ public class Main implements ActionListener {
     }
 
     public boolean CheckAuth(char[] pwd){
-
         ToConsole(String.valueOf(pwd));
         if (String.valueOf(pwd).equalsIgnoreCase("111")) {
             return true;
@@ -263,10 +263,19 @@ public class Main implements ActionListener {
     }
 
     public void RedrawForm(){
-        JPanel left_panel = Designer.dpanel(0,0,300,viewForm.getSize().height, GREENOSNOVNOY, "left_panel");
+        JPanel left_panel = dpanel(0,0,300,viewForm.getSize().height, GREENOSNOVNOY, "left_panel");
         Border empt = BorderFactory.createMatteBorder(0, 0, 0, 1, GREENDARK);
         left_panel.setBorder(empt);
         viewForm.getContentPane().add(left_panel);
+    }
+
+    public JPanel dpanel(int x, int y, int w, int h, Color color, String name){
+        JPanel panel = new JPanel();
+        panel.setLocation(x, y);
+        panel.setSize(w, h);
+        panel.setBackground(color);
+        panel.setName(name);
+        return panel;
     }
 
 
@@ -275,10 +284,10 @@ public class Main implements ActionListener {
     }
 
     public void GetFileParam() {
-        File f = new File(jarPath + ".config");
+        File f = new File(jarPath + ".junconfig");
         if (f.exists() && !f.isDirectory()) {
             ToConsole("Загружаем файл настроек");
-            String config = ReadBinary(jarPath + ".config");
+            String config = ReadBinary(jarPath + ".junconfig");
             ReadParam(config);
         } else {
             try {
@@ -307,9 +316,10 @@ public class Main implements ActionListener {
         arrItems[3] = new GoodsItem("startup_location_y", String.valueOf(startup_location_y));
         arrItems[4] = new GoodsItem("window_on_top", String.valueOf(window_on_top));
 
+
         String jsonStr = new Gson().toJson(arrItems);
         System.out.println(jsonStr);
-        WriteBinary(jarPath + ".config", jsonStr);
+        WriteBinary(jarPath + ".junconfig", jsonStr);
     }
 
     public static class GoodsItem {
