@@ -38,7 +38,11 @@ public class Main implements ActionListener {
         //JOptionPane.showMessageDialog(viewForm, jarPath, "Warning", JOptionPane.WARNING_MESSAGE);
         GetFileParam();
         initComponents();
-        ToZip();
+
+
+        ToConsole("Начинаем тестирование записи по байтам");
+         ToConsole("Закончили тестирование записи по байтам");
+
     }
 
 
@@ -106,32 +110,17 @@ public class Main implements ActionListener {
     }
 
 
-    public static void GetFileParam(){
+    public void GetFileParam(){
         File f = new File(jarPath + ".config");
         if(f.exists() && !f.isDirectory()) {
             ToConsole("Загружаем файл настроек");
-            try {
-                input = new BufferedReader(new FileReader(jarPath + ".config"));
-            }catch (FileNotFoundException e) {
-                System.out.println("File \"" + jarPath + ".config" + "\" not found");
-                return;
-            }
-            ToConsole("Загружаем настройки " + jarPath + ".config");
-            String tmp = "";
-            String config = "";
-            try {
-                while ((tmp = input.readLine()) != null){
-                    config += tmp;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            ToConsole("Разбираем JSON формат");
+            String config = ReadBinary(jarPath + ".config");
             ReadParam(config);
         }else{
             try{
                 boolean bool = f.createNewFile();
                 ToConsole("Файл настроек не найден, статус записи: " + bool);
+                WriteParam();
             }catch(Exception e){
                 e.printStackTrace();
             }
@@ -181,17 +170,7 @@ public class Main implements ActionListener {
 
         String jsonStr = new Gson().toJson(arrItems);
         System.out.println(jsonStr);
-
-        try {
-            FileWriter writer = new FileWriter(jarPath + ".config", false);
-            writer.write(jsonStr);
-            writer.flush();
-        }
-        catch(IOException ex){
-            System.out.println(ex.getMessage());
-        }
-
-
+        WriteBinary(jarPath + ".config", jsonStr);
     }
 
     public class TestWindowListener implements WindowListener {
@@ -220,7 +199,7 @@ public class Main implements ActionListener {
     }
 
 
-    public byte[] InCompress(String toCompress){
+    public static byte[] InCompress(String toCompress){
         byte[] input = toCompress.getBytes();
         Deflater compressor = new Deflater();
         compressor.setLevel(Deflater.BEST_COMPRESSION);
@@ -244,7 +223,7 @@ public class Main implements ActionListener {
     }
 
 
-    public String DeCompress(byte[] compressedData){
+    public static String DeCompress(byte[] compressedData){
         Inflater decompressor = new Inflater();
         decompressor.setInput(compressedData);
         ByteArrayOutputStream bos = new ByteArrayOutputStream(compressedData.length);
@@ -263,9 +242,46 @@ public class Main implements ActionListener {
             System.out.println(e.getMessage());
         }
         String decompressedData = bos.toString();
-        System.out.println(decompressedData);
         return decompressedData;
     }
+
+
+
+    public static String ReadBinary(String filepath){
+        ByteArrayOutputStream out = null;
+        InputStream input = null;
+        try{
+            out = new ByteArrayOutputStream();
+            input = new BufferedInputStream(new FileInputStream(filepath));
+            int data = 0;
+            try {
+                while ((data = input.read()) != -1) {
+                    out.write(data);
+                }
+                input.close();
+                out.close();
+            }catch (IOException e){
+                System.out.println(e.getMessage());
+            }
+        }catch (FileNotFoundException e){
+            System.out.println(e.getMessage());
+        }
+        return DeCompress(out.toByteArray());
+    }
+
+    public static void WriteBinary(String filepath, String source){
+        byte[] arr = InCompress(source);
+        try {
+            FileOutputStream fos = new FileOutputStream(new File(filepath));
+            fos.write(arr);
+            fos.close();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+
+
 
 
 
